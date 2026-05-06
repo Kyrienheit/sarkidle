@@ -335,7 +335,7 @@ export default function Home() {
           </div>
 
           <button className="btn btn-submit" style={{ width: '100%' }} onClick={() => {
-            alert("Sonuç panoya kopyalandı! (Temsili)");
+            alert("daha eklemedim bu tuşu");
           }}>
             SONUCU PAYLAŞ
           </button>
