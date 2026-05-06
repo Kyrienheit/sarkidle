@@ -1,15 +1,17 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
+import { Redis } from '@upstash/redis';
+
+const redis = new Redis({
+  url: process.env.KV_REST_API_URL,
+  token: process.env.KV_REST_API_TOKEN,
+});
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const day = parseInt(searchParams.get('day') || '1', 10);
 
   try {
-    const filePath = path.join(process.cwd(), 'src/data/queue.json');
-    const fileContents = fs.readFileSync(filePath, 'utf8');
-    const queue = JSON.parse(fileContents);
+    const queue = await redis.get('queue') || [];
 
     const queueItem = queue[day - 1]; 
     const trackId = typeof queueItem === 'object' ? queueItem.id : queueItem;
