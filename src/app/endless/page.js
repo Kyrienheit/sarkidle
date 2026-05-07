@@ -398,13 +398,18 @@ export default function EndlessMode() {
         <div className="run-over-screen">
           <div className="run-over-title" style={{ color: 'var(--gold-primary)' }}>OYUN BİTTİ!</div>
           <p style={{ color: 'var(--text-secondary)', marginBottom: '25px' }}>
-            Tebrikler! Bu kategorideki tüm şarkıları bildin.<br/>
-            (Çok da sonsuz değilmiş!)
+            Helal..<br />
+            (Liste çok da sonsuz değilmiş. Ha ama sonsuz yapma amacın varsa buradan önerini ekleyebilirsin.)
           </p>
           <div style={{ fontSize: '3rem', marginBottom: '20px' }}>🏆</div>
-          <button className="btn btn-submit" onClick={() => window.location.href = '/'} style={{ padding: '15px' }}>
-            ANA MENÜYE DÖN
-          </button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <button className="btn btn-submit" onClick={() => window.location.href = '/oner'} style={{ padding: '15px', background: 'var(--gold-primary)', color: 'black' }}>
+              ŞARKI ÖNER ✍️
+            </button>
+            <button className="btn btn-submit" onClick={() => window.location.href = '/'} style={{ padding: '15px', background: 'transparent', border: '1px solid var(--border-color)' }}>
+              ANA MENÜYE DÖN
+            </button>
+          </div>
         </div>
       ) : gameStatus === 'run_over' ? (
         <div className="run-over-screen">
