@@ -28,6 +28,8 @@ export default function EndlessMode() {
   const [progress, setProgress] = useState(0);
   const [currentTry, setCurrentTry] = useState(0);
   const lastSongIdRef = useRef(null);
+  const [playedIds, setPlayedIds] = useState([]); // Bu run'da oynanan şarkılar
+  const [isFinished, setIsFinished] = useState(false); // Playlist bitti mi?
 
   const [guesses, setGuesses] = useState([
     { status: 'empty', text: '' },
@@ -73,16 +75,23 @@ export default function EndlessMode() {
   };
 
   const fetchNewSong = async () => {
-    if (gameStatus === 'run_over') {
+    if (gameStatus === 'run_over' || isFinished) {
       window.location.reload(); // Restart the run
       return;
     }
 
     setLoading(true);
     try {
-      const exclude = lastSongIdRef.current ? `&exclude=${lastSongIdRef.current}` : '';
+      const exclude = playedIds.length > 0 ? `&excludeIds=${playedIds.join(',')}` : '';
       const res = await fetch(`/api/endless?category=${category}${exclude}`);
       const data = await res.json();
+
+      if (data.finished) {
+        setIsFinished(true);
+        setGameStatus('finished');
+        setLoading(false);
+        return;
+      }
 
       if (data.error) {
         alert(data.error);
@@ -186,6 +195,11 @@ export default function EndlessMode() {
     setTotalPlayed(newPlayed);
     setTotalWins(newWins);
     saveEndlessStats(newStreak, newBest, newPlayed, newWins);
+
+    // Oynananlara ekle (bildiği şarkı bir daha gelmesin)
+    if (currentSong) {
+      setPlayedIds(prev => [...prev, String(currentSong.id)]);
+    }
   };
 
   const handleSkip = () => {
@@ -379,6 +393,18 @@ export default function EndlessMode() {
               {isPlaying ? '⏸' : '▶'}
             </button>
           </div>
+        </div>
+      ) : gameStatus === 'finished' ? (
+        <div className="run-over-screen">
+          <div className="run-over-title" style={{ color: 'var(--gold-primary)' }}>OYUN BİTTİ!</div>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '25px' }}>
+            Tebrikler! Bu kategorideki tüm şarkıları bildin.<br/>
+            (Çok da sonsuz değilmiş!)
+          </p>
+          <div style={{ fontSize: '3rem', marginBottom: '20px' }}>🏆</div>
+          <button className="btn btn-submit" onClick={() => window.location.href = '/'} style={{ padding: '15px' }}>
+            ANA MENÜYE DÖN
+          </button>
         </div>
       ) : gameStatus === 'run_over' ? (
         <div className="run-over-screen">

@@ -47,22 +47,25 @@ export async function POST(request) {
 }
 
 // Şarkı sil (index ile)
+// Şarkı sil (ID ile)
 export async function DELETE(request) {
   try {
     const { searchParams } = new URL(request.url);
-    const index = parseInt(searchParams.get('index'), 10);
+    const id = searchParams.get('id');
     const category = searchParams.get('category') || 'mixed';
     const redisKey = `endless_playlist_${category}`;
 
     let playlist = await redis.get(redisKey) || [];
 
-    if (index >= 0 && index < playlist.length) {
-      playlist.splice(index, 1);
-      await redis.set(redisKey, playlist);
-      return NextResponse.json({ success: true, playlist });
+    // ID'ye göre filtrele
+    const newPlaylist = playlist.filter(item => String(item.id) !== String(id));
+
+    if (playlist.length !== newPlaylist.length) {
+      await redis.set(redisKey, newPlaylist);
+      return NextResponse.json({ success: true, playlist: newPlaylist });
     }
 
-    return NextResponse.json({ error: 'Geçersiz indeks' }, { status: 400 });
+    return NextResponse.json({ error: 'Şarkı bulunamadı' }, { status: 404 });
   } catch (error) {
     return NextResponse.json({ error: 'Silme hatası' }, { status: 500 });
   }

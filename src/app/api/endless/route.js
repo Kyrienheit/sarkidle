@@ -9,7 +9,7 @@ const redis = new Redis({
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const category = searchParams.get('category') || 'mixed';
-  const excludeId = searchParams.get('exclude'); // Bir önceki şarkıyı tekrar verme
+  const excludeIds = searchParams.get('excludeIds')?.split(',') || []; // Virgülle ayrılmış ID listesi
 
   try {
     const redisKey = `endless_playlist_${category}`;
@@ -19,10 +19,14 @@ export async function GET(request) {
       return NextResponse.json({ error: `${category} playlisti boş. Admin panelden şarkı ekle.` }, { status: 404 });
     }
 
-    // Önceki şarkıyı hariç tut (mümkünse)
-    let pool = playlist;
-    if (excludeId && playlist.length > 1) {
-      pool = playlist.filter(item => String(item.id) !== String(excludeId));
+    // Oynanan şarkıları filtrele
+    const pool = playlist.filter(item => !excludeIds.includes(String(item.id)));
+
+    if (pool.length === 0) {
+      return NextResponse.json({ 
+        error: 'Tebrikler! Bu kategorideki bütün şarkıları bildin. (Çok da sonsuz değilmiş!)',
+        finished: true 
+      }, { status: 200 });
     }
 
     // Rastgele bir şarkı seç

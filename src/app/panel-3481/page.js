@@ -141,13 +141,16 @@ export default function AdminPanel() {
     }
   };
 
-  const removeFromEndless = async (index) => {
+  const removeFromEndless = async (id) => {
     if(!confirm('Bu şarkıyı endless listesinden silmek istediğine emin misin?')) return;
 
-    const res = await fetch(`/api/endless/playlist?index=${index}&category=${endlessCategory}`, { method: 'DELETE' });
+    const res = await fetch(`/api/endless/playlist?id=${id}&category=${endlessCategory}`, { method: 'DELETE' });
     if (res.ok) {
       const data = await res.json();
       setEndlessPlaylist(data.playlist);
+    } else {
+      const errorData = await res.json();
+      alert(`Silme başarısız: ${errorData.error || 'Bilinmeyen hata'}`);
     }
   };
 
@@ -430,7 +433,7 @@ export default function AdminPanel() {
                   </div>
                   <button
                     className="endless-delete-btn"
-                    onClick={() => removeFromEndless(realIndex)}
+                    onClick={() => removeFromEndless(item.id)}
                     title="Sil"
                   >
                     ✕
