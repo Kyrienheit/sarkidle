@@ -9,6 +9,7 @@ const TOTAL_DURATION = 30;
 export default function Home() {
   const [activeModal, setActiveModal] = useState(null);
   const [showEndGameModal, setShowEndGameModal] = useState(false); // Sonuç ekranı görünürlüğü
+  const [endlessDifficulty, setEndlessDifficulty] = useState('easy'); // 'easy' | 'hard'
 
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
@@ -287,15 +288,71 @@ export default function Home() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.9rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <div style={{ width: 20, height: 20, background: 'var(--success-color)', borderRadius: 4 }}></div>
-                  <span><strong>Yeşil:</strong> Şarkı ve sanatçı tamamen DOĞRU!</span>
+                  <span><strong>Yeşil:</strong> Şarkı da sanatçı DOĞRU!</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <div style={{ width: 20, height: 20, background: '#f39c12', borderRadius: 4 }}></div>
-                  <span><strong>Turuncu:</strong> Sanatçı DOĞRU, ancak şarkı yanlış.</span>
+                  <span><strong>Turuncu:</strong> Sanatçı DOĞRU! ancak şarkı YANLIŞ!</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <div style={{ width: 20, height: 20, border: '2px solid var(--wrong-color)', borderRadius: 4 }}></div>
-                  <span><strong>Kırmızı:</strong> Sanatçı da şarkı da YANLIŞ.</span>
+                  <span><strong>Kırmızı:</strong> Sanatçı da şarkı da YANLIŞ!</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeModal === 'endless' && (
+            <div>
+              <h2 style={{ marginBottom: '1.5rem', color: 'var(--gold-primary)', textAlign: 'center' }}>♾️ Sınırsız Mod</h2>
+
+              {/* Zorluk Seçici */}
+              <div className="difficulty-toggle-container">
+                <span style={{ fontSize: '0.85rem', color: endlessDifficulty === 'easy' ? 'var(--gold-primary)' : 'var(--text-secondary)' }}>KOLAY</span>
+                <div
+                  className={`difficulty-slider ${endlessDifficulty === 'hard' ? 'hard' : ''}`}
+                  onClick={() => setEndlessDifficulty(prev => prev === 'easy' ? 'hard' : 'easy')}
+                >
+                  <div className="difficulty-knob"></div>
+                </div>
+                <span style={{ fontSize: '0.85rem', color: endlessDifficulty === 'hard' ? 'var(--wrong-color)' : 'var(--text-secondary)' }}>ZOR</span>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div
+                  className="endless-modal-item endless-modal-active"
+                  onClick={() => { window.location.href = `/endless?category=mixed&difficulty=${endlessDifficulty}`; }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <span style={{ fontSize: '1.5rem' }}>🎵</span>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: '1rem' }}>Karışık</div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Tüm türlerden rastgele şarkılar</div>
+                    </div>
+                  </div>
+                  <span className="endless-badge-go">OYNA ▶</span>
+                </div>
+
+                <div className="endless-modal-item endless-modal-locked">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <span style={{ fontSize: '1.5rem' }}>🎤</span>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: '1rem' }}>Pop</div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Yakında</div>
+                    </div>
+                  </div>
+                  <span style={{ fontSize: '1.2rem' }}>🔒</span>
+                </div>
+
+                <div className="endless-modal-item endless-modal-locked">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <span style={{ fontSize: '1.5rem' }}>🎸</span>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: '1rem' }}>Rock</div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Yakında</div>
+                    </div>
+                  </div>
+                  <span style={{ fontSize: '1.2rem' }}>🔒</span>
                 </div>
               </div>
             </div>
@@ -423,11 +480,20 @@ export default function Home() {
       />
 
       <header className="header">
-        <div className="header-icons" onClick={() => setActiveModal('help')}>❓</div>
+        <div className="header-icons" onClick={() => setActiveModal('help')}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
         <h1>ŞARKIDLE</h1>
         <div className="header-icons" style={{ display: 'flex', gap: '15px' }}>
-          <span onClick={() => setActiveModal('stats')}>📊</span>
-          <span onClick={() => setActiveModal('archive')}>🗂️</span>
+          <span onClick={() => setActiveModal('endless')} title="Sınırsız Mod">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 12c-2-2.67-4-4-6-4a4 4 0 1 0 0 8c2 0 4-1.33 6-4Zm0 0c2 2.67 4 4 6 4a4 4 0 0 0 0-8c-2 0-4 1.33-6 4Z"/></svg>
+          </span>
+          <span onClick={() => setActiveModal('stats')} title="İstatistikler">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          </span>
+          <span onClick={() => setActiveModal('archive')} title="Arşiv">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg>
+          </span>
         </div>
       </header>
 
@@ -501,7 +567,7 @@ export default function Home() {
             <input
               type="text"
               className="search-input"
-              placeholder="Bir şarkı veya sanatçı tahmin et..."
+              placeholder="Şarkı gir..."
               value={query}
               onChange={(e) => {
                 setQuery(e.target.value);
