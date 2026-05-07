@@ -66,7 +66,7 @@ export default function EndlessMode() {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('sarkidle_endless_stats');
       let oldStats = {};
-      try { oldStats = JSON.parse(saved) || {}; } catch(e) {}
+      try { oldStats = JSON.parse(saved) || {}; } catch (e) { }
 
       localStorage.setItem('sarkidle_endless_stats', JSON.stringify({
         ...oldStats,
@@ -199,8 +199,8 @@ export default function EndlessMode() {
     // Kalıcı istatistikleri de arka planda güncelle (ana sayfada göstermek için)
     const saved = localStorage.getItem('sarkidle_endless_stats');
     let stats = {};
-    try { stats = JSON.parse(saved) || {}; } catch(e) {}
-    
+    try { stats = JSON.parse(saved) || {}; } catch (e) { }
+
     localStorage.setItem('sarkidle_endless_stats', JSON.stringify({
       ...stats,
       currentStreak: newStreak,
@@ -297,7 +297,7 @@ export default function EndlessMode() {
         </div>
         <div className="hints-list" style={{ position: 'relative', zIndex: 2 }}>
           {hints.length === 0 ? (
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', fontStyle: 'italic' }}>Yeni ipuçları için yanlış tahmin yap veya atla...</p>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', fontStyle: 'italic' }}>İpuçları için tahmin yap veya atla...</p>
           ) : (
             hints.map((hint, i) => <div key={i} className="hint-item">{hint}</div>)
           )}
@@ -330,7 +330,7 @@ export default function EndlessMode() {
         <div className="header-icons" onClick={() => window.location.href = '/'}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>
         </div>
-        
+
         <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
           <div style={{ textAlign: 'center' }}>
             <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', display: 'block' }}>OYNANAN</span>
@@ -347,11 +347,11 @@ export default function EndlessMode() {
           <div style={{ width: '1px', height: '25px', background: 'var(--border-color)' }}></div>
 
           <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-             <span style={{ fontSize: '0.55rem', color: 'var(--text-secondary)', fontWeight: 600 }}>EN İYİ SERİ</span>
-             <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
-                <span style={{ fontSize: '0.65rem', fontWeight: 700 }}>KOLAY: <span style={{ color: 'var(--gold-primary)' }}>{bestStreakEasy}</span></span>
-                <span style={{ fontSize: '0.65rem', fontWeight: 700 }}>ZOR: <span style={{ color: 'var(--wrong-color)' }}>{bestStreakHard}</span></span>
-             </div>
+            <span style={{ fontSize: '0.55rem', color: 'var(--text-secondary)', fontWeight: 600 }}>EN İYİ SERİ</span>
+            <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
+              <span style={{ fontSize: '0.65rem', fontWeight: 700 }}>KOLAY: <span style={{ color: 'var(--gold-primary)' }}>{bestStreakEasy}</span></span>
+              <span style={{ fontSize: '0.65rem', fontWeight: 700 }}>ZOR: <span style={{ color: 'var(--wrong-color)' }}>{bestStreakHard}</span></span>
+            </div>
           </div>
         </div>
 
