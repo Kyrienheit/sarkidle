@@ -100,8 +100,7 @@ export default function AdminPanel() {
   };
 
   const removeFromQueue = async (index) => {
-    if(!confirm('Bu şarkıyı sıradan silmek istediğine emin misin?')) return;
-    
+    console.log('removeFromQueue triggered', index);
     const res = await fetch(`/api/queue?index=${index}`, { method: 'DELETE' });
     if (res.ok) {
       const data = await res.json();
@@ -111,6 +110,7 @@ export default function AdminPanel() {
 
   // --- Endless Functions ---
   const addToEndless = async (track) => {
+    console.log('addToEndless triggered', track.id);
     const newTrack = {
       id: track.id,
       title: track.title,
@@ -142,8 +142,7 @@ export default function AdminPanel() {
   };
 
   const removeFromEndless = async (id) => {
-    if(!confirm('Bu şarkıyı endless listesinden silmek istediğine emin misin?')) return;
-
+    console.log('removeFromEndless triggered', id);
     const res = await fetch(`/api/endless/playlist?id=${id}&category=${endlessCategory}`, { method: 'DELETE' });
     if (res.ok) {
       const data = await res.json();
