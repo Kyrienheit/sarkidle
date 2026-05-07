@@ -13,9 +13,9 @@ export default function EndlessMode() {
 
   const [gameStatus, setGameStatus] = useState('playing'); // 'playing', 'won', 'lost', 'run_over'
   const [streak, setStreak] = useState(0);
-  const [bestStreak, setBestStreak] = useState(0);
-  const [totalPlayed, setTotalPlayed] = useState(0);
-  const [totalWins, setTotalWins] = useState(0);
+  const [bestStreakEasy, setBestStreakEasy] = useState(0);
+  const [bestStreakHard, setBestStreakHard] = useState(0);
+  const [currentRunCount, setCurrentRunCount] = useState(1);
 
   // Difficulty & Category
   const [difficulty, setDifficulty] = useState('easy');
@@ -55,21 +55,24 @@ export default function EndlessMode() {
         try {
           const stats = JSON.parse(saved);
           setStreak(stats.currentStreak || 0);
-          setBestStreak(stats.bestStreak || 0);
-          setTotalPlayed(stats.totalPlayed || 0);
-          setTotalWins(stats.totalWins || 0);
+          setBestStreakEasy(stats.bestStreakEasy || stats.bestStreak || 0);
+          setBestStreakHard(stats.bestStreakHard || 0);
         } catch (e) { /* ignore */ }
       }
     }
   }, []);
 
-  const saveEndlessStats = (newStreak, newBest, newPlayed, newWins) => {
+  const saveEndlessStats = (newStreak, newBestEasy, newBestHard) => {
     if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('sarkidle_endless_stats');
+      let oldStats = {};
+      try { oldStats = JSON.parse(saved) || {}; } catch(e) {}
+
       localStorage.setItem('sarkidle_endless_stats', JSON.stringify({
+        ...oldStats,
         currentStreak: newStreak,
-        bestStreak: newBest,
-        totalPlayed: newPlayed,
-        totalWins: newWins
+        bestStreakEasy: newBestEasy,
+        bestStreakHard: newBestHard
       }));
     }
   };
@@ -168,33 +171,44 @@ export default function EndlessMode() {
   };
 
   const finishGame = (status) => {
-    const newPlayed = totalPlayed + 1;
-    let newStreak = streak;
-    let newWins = totalWins;
-    let newBest = bestStreak;
     let nextStatus = status;
+    let newStreak = isWin ? streak + 1 : 0;
+    if (status === 'lost') newStreak = 0;
+
+    let newBestEasy = bestStreakEasy;
+    let newBestHard = bestStreakHard;
 
     if (status === 'won') {
-      newStreak = streak + 1;
-      newWins = totalWins + 1;
-      if (newStreak > bestStreak) newBest = newStreak;
-    } else {
-      newStreak = 0;
-      if (difficulty === 'hard') {
-        const nextLives = lives - 1;
-        setLives(nextLives);
-        if (nextLives <= 0) {
-          nextStatus = 'run_over';
-        }
+      if (difficulty === 'easy' && newStreak > bestStreakEasy) newBestEasy = newStreak;
+      if (difficulty === 'hard' && newStreak > bestStreakHard) newBestHard = newStreak;
+    }
+
+    if (status === 'lost' && difficulty === 'hard') {
+      const nextLives = lives - 1;
+      setLives(nextLives);
+      if (nextLives <= 0) {
+        nextStatus = 'run_over';
       }
     }
 
     setGameStatus(nextStatus);
     setStreak(newStreak);
-    setBestStreak(newBest);
-    setTotalPlayed(newPlayed);
-    setTotalWins(newWins);
-    saveEndlessStats(newStreak, newBest, newPlayed, newWins);
+    setBestStreakEasy(newBestEasy);
+    setBestStreakHard(newBestHard);
+
+    // Kalıcı istatistikleri de arka planda güncelle (ana sayfada göstermek için)
+    const saved = localStorage.getItem('sarkidle_endless_stats');
+    let stats = {};
+    try { stats = JSON.parse(saved) || {}; } catch(e) {}
+    
+    localStorage.setItem('sarkidle_endless_stats', JSON.stringify({
+      ...stats,
+      currentStreak: newStreak,
+      bestStreakEasy: newBestEasy,
+      bestStreakHard: newBestHard,
+      totalPlayed: (stats.totalPlayed || 0) + 1,
+      totalWins: (stats.totalWins || 0) + (status === 'won' ? 1 : 0)
+    }));
 
     // Oynananlara ekle (bildiği şarkı bir daha gelmesin)
     if (currentSong) {
@@ -258,42 +272,41 @@ export default function EndlessMode() {
   };
 
   const renderHints = () => {
-    if (gameStatus !== 'playing' || !currentSong) return null;
+    if (difficulty !== 'easy' || gameStatus !== 'playing' || !currentSong) return null;
 
     const hints = [];
     if (currentTry >= 1) hints.push(`⏱️ Uzunluk: ${currentSong.duration}`);
     if (currentTry >= 2) hints.push(`📅 Çıkış Yılı: ${currentSong.release_date}`);
     if (currentTry >= 3) hints.push(`💽 Albüm: ${currentSong.album}`);
-    if (currentTry >= 4) hints.push(`🎤 Sanatçının İlk Harfi: ${currentSong.artist.charAt(0)}`);
+    if (currentTry >= 4) hints.push(`🎤 İlk Harf: ${currentSong.artist.charAt(0)}`);
     if (currentTry >= 5) hints.push(`🎵 Sanatçı: ${currentSong.artist}`);
 
     return (
-      <div className="hints-container" style={{ position: 'relative', overflow: 'hidden' }}>
+      <div className="hints-container" style={{ position: 'relative', overflow: 'hidden', marginBottom: '15px' }}>
         <div className="waveform-container">
-          {[...Array(25)].map((_, i) => {
-            const duration = 0.3 + ((i * 7) % 5) * 0.1;
-            const delay = ((i * 3) % 4) * 0.1;
-            return (
-              <div
-                key={i}
-                className={`waveform-bar ${isPlaying ? 'active' : ''}`}
-                style={isPlaying ? { animationDuration: `${duration}s`, animationDelay: `${delay}s` } : {}}
-              />
-            );
-          })}
+          {[...Array(25)].map((_, i) => (
+            <div
+              key={i}
+              className={`waveform-bar ${isPlaying ? 'active' : ''}`}
+              style={{
+                height: isPlaying ? `${20 + Math.random() * 60}%` : '15%',
+                animationDelay: `${i * 0.05}s`
+              }}
+            />
+          ))}
         </div>
-
-        {hints.length > 0 && (
-          <div style={{ position: 'relative', zIndex: 1 }}>
-            <strong style={{ color: 'var(--gold-primary)', display: 'block', marginBottom: '5px' }}>İpuçları:</strong>
-            <div className="hints-list">
-              {hints.map((h, i) => <div key={i} className="hint-item">{h}</div>)}
-            </div>
-          </div>
-        )}
+        <div className="hints-list" style={{ position: 'relative', zIndex: 2 }}>
+          {hints.length === 0 ? (
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', fontStyle: 'italic' }}>Yeni ipuçları için yanlış tahmin yap veya atla...</p>
+          ) : (
+            hints.map((hint, i) => <div key={i} className="hint-item">{hint}</div>)
+          )}
+        </div>
       </div>
     );
   };
+
+  const isWin = gameStatus === 'won';
 
   if (loading || !currentSong) {
     return (
@@ -304,8 +317,6 @@ export default function EndlessMode() {
     );
   }
 
-  const isWin = gameStatus === 'won';
-
   return (
     <main className="game-container">
       <audio
@@ -315,21 +326,36 @@ export default function EndlessMode() {
         onEnded={() => { setIsPlaying(false); setProgress(0); }}
       />
 
-      <header className="header">
+      <header className="header" style={{ marginBottom: '15px' }}>
         <div className="header-icons" onClick={() => window.location.href = '/'}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>
         </div>
-        <div style={{ textAlign: 'center' }}>
-          <h1 style={{ fontSize: '1.2rem', lineHeight: 1 }}>SONSUZ</h1>
-          {/* <div style={{ fontSize: '0.6rem', color: 'var(--gold-primary)', fontWeight: 800 }}>{category.toUpperCase()} • {difficulty.toUpperCase()}</div> */}
-        </div>
-        <div className="header-icons" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-          <div className="endless-streak-badge">
-            <span className="endless-streak-fire">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8.5 14.5c-.9-1.8-1.1-3.6-.8-5.7 1-.3 1.8-.1 2.3.4.6.6.7 1.4.3 2.7-.4 1.2-.2 2.1.5 2.8s1.6.8 2.6.4c1.1-.4 1.6-1.2 1.6-2.4s-.3-2.2-1-3c-.7-.8-1.5-1.2-2.3-1.3-.8-.1-1.4 0-1.8.4-.4.4-.6 1-.6 1.7 0 .7.2 1.3.5 1.8.3.5.5 1.1.5 1.8s-.4 1.3-1.1 1.8c-.7.5-1.5.7-2.3.7-.8 0-1.5-.2-2.1-.6-.6-.4-1.1-.9-1.4-1.6-.3-.7-.5-1.4-.5-2.2s.3-1.5.8-2.2c.5-.7 1.1-1.3 1.9-1.8.8-.5 1.6-.9 2.5-1.2.9-.3 1.8-.4 2.8-.3 1 .1 1.9.4 2.7.8.8.4 1.5 1 2.1 1.7s1 1.5 1.3 2.5c.3 1 .4 2 .3 3.1-.1 1.1-.4 2.1-1 3.1-.6 1-1.4 1.8-2.4 2.4-1 .6-2.1 1-3.3 1.2-1.2.2-2.4.1-3.6-.2-1.2-.3-2.3-.8-3.3-1.5-1-.7-1.8-1.6-2.4-2.7z" /></svg>
-            </span>
-            <span className="endless-streak-num">{streak}</span>
+        
+        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+          <div style={{ textAlign: 'center' }}>
+            <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', display: 'block' }}>OYNANAN</span>
+            <span style={{ fontSize: '1.1rem', fontWeight: 800 }}>#{currentRunCount}</span>
           </div>
+
+          <div style={{ width: '1px', height: '25px', background: 'var(--border-color)' }}></div>
+
+          <div style={{ textAlign: 'center' }}>
+            <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', display: 'block' }}>SERİ</span>
+            <span style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--gold-primary)' }}>{streak}</span>
+          </div>
+
+          <div style={{ width: '1px', height: '25px', background: 'var(--border-color)' }}></div>
+
+          <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+             <span style={{ fontSize: '0.55rem', color: 'var(--text-secondary)', fontWeight: 600 }}>EN İYİ SERİ</span>
+             <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
+                <span style={{ fontSize: '0.65rem', fontWeight: 700 }}>KOLAY: <span style={{ color: 'var(--gold-primary)' }}>{bestStreakEasy}</span></span>
+                <span style={{ fontSize: '0.65rem', fontWeight: 700 }}>ZOR: <span style={{ color: 'var(--wrong-color)' }}>{bestStreakHard}</span></span>
+             </div>
+          </div>
+        </div>
+
+        <div className="header-icons" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
           {difficulty === 'hard' && (
             <div className="endless-lives">
               {[...Array(3)].map((_, i) => (
@@ -340,28 +366,8 @@ export default function EndlessMode() {
         </div>
       </header>
 
-      {/* İstatistik barı */}
-      <div className="endless-stats-bar">
-        <div className="endless-stat">
-          <span className="endless-stat-val">{totalPlayed}</span>
-          <span className="endless-stat-label">Oynanan</span>
-        </div>
-        <div className="endless-stat">
-          <span className="endless-stat-val">{totalWins}</span>
-          <span className="endless-stat-label">Bilinen</span>
-        </div>
-        <div className="endless-stat">
-          <span className="endless-stat-val">{streak}</span>
-          <span className="endless-stat-label">Seri</span>
-        </div>
-        <div className="endless-stat">
-          <span className="endless-stat-val">{bestStreak}</span>
-          <span className="endless-stat-label">En İyi</span>
-        </div>
-      </div>
-
       {/* İpuçları */}
-      {gameStatus === 'playing' && renderHints()}
+      {renderHints()}
 
       {/* Tahminler */}
       <div className="guesses">

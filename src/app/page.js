@@ -269,15 +269,33 @@ export default function Home() {
             </div>
           )}
 
-          {activeModal === 'stats' && (
-            <div>
-              <h2 style={{ marginBottom: '1rem', color: 'var(--gold-primary)' }}>İstatistikler</h2>
-              <p style={{ color: 'var(--text-secondary)', marginBottom: '5px' }}>Oynanan: {gameState?.stats?.played || 0}</p>
-              <p style={{ color: 'var(--text-secondary)', marginBottom: '5px' }}>Kazanma Oranı: %{gameState?.stats?.played ? Math.round((gameState?.stats?.wins / gameState?.stats?.played) * 100) : 0}</p>
-              <p style={{ color: 'var(--text-secondary)', marginBottom: '5px' }}>Seri: {gameState?.stats?.currentStreak || 0}</p>
-              <p style={{ color: 'var(--text-secondary)' }}>Maksimum Seri: {gameState?.stats?.maxStreak || 0}</p>
-            </div>
-          )}
+          {activeModal === 'stats' && (() => {
+            const endlessSaved = typeof window !== 'undefined' ? localStorage.getItem('sarkidle_endless_stats') : null;
+            let endlessStats = { totalPlayed: 0, totalWins: 0, bestStreakEasy: 0, bestStreakHard: 0 };
+            if (endlessSaved) {
+              try { endlessStats = JSON.parse(endlessSaved); } catch(e) {}
+            }
+
+            return (
+              <div>
+                <h2 style={{ marginBottom: '1rem', color: 'var(--gold-primary)' }}>İstatistikler</h2>
+                <div style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '15px', marginBottom: '15px' }}>
+                  <h3 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '10px' }}>GÜNLÜK MOD</h3>
+                  <p style={{ color: 'var(--text-secondary)', marginBottom: '5px' }}>Oynanan: {gameState?.stats?.played || 0}</p>
+                  <p style={{ color: 'var(--text-secondary)', marginBottom: '5px' }}>Kazanma Oranı: %{gameState?.stats?.played ? Math.round((gameState?.stats?.wins / gameState?.stats?.played) * 100) : 0}</p>
+                  <p style={{ color: 'var(--text-secondary)', marginBottom: '5px' }}>Seri: {gameState?.stats?.currentStreak || 0}</p>
+                  <p style={{ color: 'var(--text-secondary)' }}>Maksimum Seri: {gameState?.stats?.maxStreak || 0}</p>
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '10px' }}>SONSUZ MOD</h3>
+                  <p style={{ color: 'var(--text-secondary)', marginBottom: '5px' }}>Toplam Oynanan: {endlessStats.totalPlayed || 0}</p>
+                  <p style={{ color: 'var(--text-secondary)', marginBottom: '5px' }}>Toplam Bilinen: {endlessStats.totalWins || 0}</p>
+                  <p style={{ color: 'var(--gold-primary)', marginBottom: '5px' }}>En İyi Seri (Kolay): {endlessStats.bestStreakEasy || endlessStats.bestStreak || 0}</p>
+                  <p style={{ color: 'var(--wrong-color)' }}>En İyi Seri (Zor): {endlessStats.bestStreakHard || 0}</p>
+                </div>
+              </div>
+            );
+          })()}
 
           {activeModal === 'help' && (
             <div>
